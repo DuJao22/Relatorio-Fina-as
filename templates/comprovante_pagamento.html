@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="pt-BR" oncopy="return false" oncut="return false" onselectstart="return false" oncontextmenu="return false">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comprovante de Pagamento - {{ pagamento.nome }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @page {
+            size: A4;
+            margin: 2cm;
+        }
+        body {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+        @media print {
+            body { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+            .no-print { display: none !important; }
+        }
+        .holerite-container {
+            border: 2px solid #059669;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px auto;
+            max-width: 600px;
+            background: white;
+        }
+        .header-holerite {
+            background: linear-gradient(135deg, #059669, #10b981);
+            color: white;
+            padding: 15px;
+            border-radius: 6px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .info-label {
+            font-weight: bold;
+            color: #374151;
+        }
+        .info-value {
+            color: #059669;
+            font-weight: 600;
+        }
+        .total-section {
+            background: #f0fdf4;
+            border: 1px solid #059669;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .signature-section {
+            margin-top: 40px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .signature-box {
+            text-align: center;
+            width: 45%;
+        }
+        .signature-line {
+            border-bottom: 1px solid #374151;
+            margin-bottom: 5px;
+            height: 40px;
+        }
+    </style>
+</head>
+<body>
+    <div class="no-print mb-4 text-center">
+        <button onclick="window.print()" class="bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700">
+            🖨️ Imprimir Comprovante
+        </button>
+        <button onclick="window.close()" class="bg-gray-500 text-white px-6 py-2 rounded-md hover:bg-gray-600 ml-2">
+            ✖️ Fechar
+        </button>
+    </div>
+
+    <div class="holerite-container">
+        <!-- Cabeçalho -->
+        <div class="header-holerite">
+            <h1 class="text-2xl font-bold mb-2">COMPROVANTE DE PAGAMENTO</h1>
+            <h2 class="text-lg">{{ pagamento.clinica }}</h2>
+            <p class="text-sm mt-2">Mês/Ano: {{ pagamento.data[:7] }} ({{ datetime.strptime(pagamento.data[:7], '%Y-%m').strftime('%B/%Y') }})</p>
+        </div>
+
+        <!-- Dados do Colaborador -->
+        <div class="mb-6">
+            <h3 class="text-lg font-bold text-green-700 mb-3 border-b-2 border-green-200 pb-1">DADOS DO COLABORADOR</h3>
+            
+            <div class="info-row">
+                <span class="info-label">Nome:</span>
+                <span class="info-value">{{ pagamento.nome }}</span>
+            </div>
+            
+            <div class="info-row">
+                <span class="info-label">Tipo:</span>
+                <span class="info-value">{{ pagamento.tipo }}</span>
+            </div>
+            
+            <div class="info-row">
+                <span class="info-label">Clínica:</span>
+                <span class="info-value">{{ pagamento.clinica }}</span>
+            </div>
+            
+            <div class="info-row">
+                <span class="info-label">Chave PIX:</span>
+                <span class="info-value">{{ pagamento.pix or 'Não informado' }}</span>
+            </div>
+        </div>
+
+        <!-- Discriminação dos Valores -->
+        <div class="mb-6">
+            <h3 class="text-lg font-bold text-green-700 mb-3 border-b-2 border-green-200 pb-1">DISCRIMINAÇÃO DOS VALORES</h3>
+            
+            <div class="info-row">
+                <span class="info-label">Salário Base:</span>
+                <span class="info-value">{{ formatar_moeda(pagamento.valor_base) }}</span>
+            </div>
+            
+            <div class="info-row">
+                <span class="info-label">Auxílio Passagem:</span>
+                <span class="info-value">{{ formatar_moeda(pagamento.passagem) }}</span>
+            </div>
+            
+            <div class="info-row">
+                <span class="info-label">Total Bruto:</span>
+                <span class="info-value">{{ formatar_moeda(total_bruto) }}</span>
+            </div>
+            
+            <div class="info-row" style="color: #dc2626;">
+                <span class="info-label">(-) Desconto Vales:</span>
+                <span style="color: #dc2626; font-weight: 600;">{{ formatar_moeda(pagamento.vale) }}</span>
+            </div>
+        </div>
+
+        <!-- Total Líquido -->
+        <div class="total-section">
+            <div class="flex justify-between items-center">
+                <span class="text-xl font-bold text-green-800">TOTAL LÍQUIDO A RECEBER:</span>
+                <span class="text-2xl font-bold text-green-600">{{ formatar_moeda(pagamento.total_final) }}</span>
+            </div>
+        </div>
+
+        
+
+        <!-- Assinaturas -->
+        <div class="signature-section">
+            <div class="signature-box">
+                <div class="signature-line"></div>
+                <p class="text-sm font-semibold">Assinatura do Colaborador</p>
+                <p class="text-xs text-gray-500">{{ pagamento.nome }}</p>
+            </div>
+            
+            <div class="signature-box">
+                <div class="signature-line"></div>
+                <p class="text-sm font-semibold">Assinatura da Clínica</p>
+                <p class="text-xs text-gray-500">{{ pagamento.clinica }}</p>
+            </div>
+        </div>
+
+        <!-- Data de Emissão -->
+        <div class="text-center mt-6 text-sm text-gray-500">
+            <p>Comprovante emitido em {{ datetime.now().strftime('%d/%m/%Y às %H:%M') }}</p>
+        </div>
+    </div>
+
+    <!-- Rodapé -->
+    <div class="text-center mt-8 text-xs text-gray-400">
+        <p><strong>Sistema criado por João Layon</strong></p>
+    </div>
+
+    <script>
+        window.onload = function() {
+            // Auto-print quando abrir a página
+            setTimeout(function() {
+                window.print();
+            }, 500);
+        }
+    </script>
+</body>
+</html>
